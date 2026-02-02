@@ -3,9 +3,12 @@ package org.example.resetful;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
+import org.example.entity.MyStreamingHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,12 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static org.apache.coyote.http11.Constants.a;
+
 @RestController
 @RequestMapping("/langChain")
 public class LangChainChatController {
 
     @Autowired
     private ChatLanguageModel deepseek;
+
+    @Autowired
+    private StreamingChatLanguageModel deepseekStream;
 
     /***
      * 这个是最简单的demo，直接使用chatModel聊天，
@@ -68,6 +76,22 @@ public class LangChainChatController {
         ChatResponse chatResponse = deepseek.chat(chatRequest);
         System.out.println(chatResponse.aiMessage().type());
         return chatResponse.aiMessage().text();
+    }
+
+
+
+    //todo 流式响应spring boot 集成
+    @RequestMapping(path = "/chatStream", method = RequestMethod.GET)
+    public void chatStream(@RequestParam(name = "userMessage", defaultValue = "hi", required = false) String userMessage) {
+        UserMessage userMessage1 = UserMessage.from(userMessage);
+        SystemMessage systemMessage = SystemMessage.from("你是一位严厉的老师");
+        ChatRequest chatRequest = ChatRequest.builder()
+                .messages(List.of(userMessage1, systemMessage))
+                .parameters(OpenAiChatRequestParameters.builder()
+                        .maxOutputTokens(10)
+                        .build())
+                .build();
+        deepseekStream.chat(chatRequest, new MyStreamingHandler());
     }
 
 
