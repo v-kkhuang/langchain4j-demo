@@ -135,11 +135,32 @@ ChatMessage2就会根据前面的问答获取信息，就显得有记忆，这�
 
 #### 多模态对接：
 
+多模态对接的基本要求：
+1. 需要模型支持多模态对接
+2. 将图片，音频，视频等用userMessage传入大模型
+
+原理：content接口，有多种实现：textContent，imageContent，audioContent，videoContent等
+
+![img_1.png](img_1.png)
 
 
+> UserMessage userMessage = UserMessage.from(
+> TextContent.from("Describe the following image"),
+> ImageContent.from("https://example.com/cat.jpg")
+> );
+> ChatResponse response = model.chat(userMessage);
 
 #### 流失对接：
 
-    
+流式与正常接口区别：
+1. 正常接口是一次请求一次完整回复，流失是stream有一点回复就返回，然后继续返回，直到结束，所以会有很多的片段，需要处理
+2. 流式接口需要使用streamingResponseHandler，处理流式返回的片段
+3. 流式与正常调用大模型的方法不一样，正常是chatLanguageModel，流式是streamingChatLanguageModel，LanguageModel同理
+4. streamingResponseHandler是接口，传参数是需要实现接口
+5. 实现streamingResponseHandler可以使用工具类LambdaStreamingResponseHandler，用lambda表达更简单的实现
+
+详细实例和细节见文档：https://docs.langchain4j.info/tutorials/response-streaming
+
+#### AiService聊天：
 
 
